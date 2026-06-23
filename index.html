@@ -57,7 +57,7 @@
             opacity: 1;
         }
 
-        /* Red Warning Banner (Updated to match image_2733a0.png styling layout) */
+        /* Red Warning Banner */
         .warning-banner {
             background: #ff0055;
             color: white;
@@ -146,28 +146,23 @@
 </head>
 <body>
 
-    <!-- Live Video Feed -->
     <video id="camera-stream" autoplay playsinline></video>
 
-    <!-- Top Header -->
     <div class="scan-title">
         <div style="font-size: 18px; font-weight: bold; letter-spacing: 1px;">[ CURSED FOOD INSPECTOR ]</div>
         <div id="status-text" style="font-size: 11px; color: #fff; margin-top: 5px;">AIM AT TREND FOOD & TAP SCAN</div>
     </div>
 
-    <!-- AR Graphics Group -->
     <div class="filter-overlay" id="ar-graphics">
-        <!-- Dynamic Overpriced Danger Alert -->
         <div class="overprice-banner" id="overprice-alert">🚨 OVERPRICED GIMMICK DETECTED 🚨</div>
         
-        <!-- Updated Warning Text based on image_2733a0.png context -->
-        <div class="warning-banner">⚠️ WARNING: UNHEALTHY FUSION FOOD DETECTED</div>
+        <div class="warning-banner" id="main-warning">⚠️ WARNING: GIMMICK DETECTED</div>
         
         <div class="target-box"></div>
-        <div class="info-banner" id="flavor-text">CRITICAL ERROR:<br>Flavor Profiles Cry Out In Confusion</div>
+        
+        <div class="info-banner" id="flavor-text">CRITICAL ERROR:<br>Processing visual parameters...</div>
     </div>
 
-    <!-- Bottom Action Button -->
     <div class="ui-overlay">
         <button class="scan-btn" id="action-trigger" onclick="handleScan()">Scan Food</button>
     </div>
@@ -177,11 +172,12 @@
         const btn = document.getElementById('action-trigger');
         const statusText = document.getElementById('status-text');
         const overpriceAlert = document.getElementById('overprice-alert');
+        const mainWarning = document.getElementById('main-warning');
         const flavorText = document.getElementById('flavor-text');
 
         function handleScan() {
             if (graphics.classList.contains('active')) {
-                // Reset everything on click clear
+                // Reset everything back to normal scanning state
                 graphics.classList.remove('active');
                 overpriceAlert.style.display = "none";
                 btn.textContent = "Scan Food";
@@ -200,25 +196,41 @@
                     return;
                 }
 
-                // Activate Filter Graphics
+                // Turn on the graphic overlays
                 graphics.classList.add('active');
                 btn.textContent = "Clear Scan";
                 btn.style.background = "#ff0055";
                 btn.style.boxShadow = "0 0 15px #ff0055";
                 btn.style.color = "#fff";
 
-                // Price checking rule logic
+                // IF PRICE IS OVER RM15 -> TRIGGER HARD ROAST
                 if (price > 15) {
                     overpriceAlert.style.display = "block";
+                    mainWarning.textContent = "⚠️ CRITICAL LEVEL UNHEALTHY FUSION FOOD";
                     overpriceAlert.innerHTML = `🚨 OVERPRICED DETECTED: RM${price} 🚨<br><span style="font-size:11px;">(Normal Keli price is RM15 max!)</span>`;
                     flavorText.innerHTML = `CRITICAL ERROR:<br>Wallet & Taste Buds Cry Out In Confusion`;
                     statusText.textContent = "[ BOOTLEG CLOUT TRAP DETECTED ]";
                     statusText.style.color = "#ffcc00";
-                } else {
-                    overpriceAlert.style.display = "none";
-                    flavorText.innerHTML = `CRITICAL ERROR:<br>Flavor Profiles Cry Out In Confusion`;
+                } 
+                // IF PRICE IS RM15 OR LESS -> CHOOSE A RANDOM RESULT
+                else {
+                    overpriceAlert.style.display = "none"; // Hide overprice banner
                     statusText.textContent = "[ GIMMICK DETECTED // LOCK ACTIVE ]";
                     statusText.style.color = "#ff0055";
+
+                    // Generate a random number between 1 and 3
+                    let randomResult = Math.floor(Math.random() * 3) + 1;
+
+                    if (randomResult === 1) {
+                        mainWarning.textContent = "⚠️ WARNING: UNHEALTHY FUSION FOOD DETECTED";
+                        flavorText.innerHTML = `ANALYSIS:<br>Excessive sugar & artificial food coloring found.`;
+                    } else if (randomResult === 2) {
+                        mainWarning.textContent = "⚠️ WARNING: 100% CLOUT, 0% TASTE";
+                        flavorText.innerHTML = `CRITICAL ERROR:<br>Flavor Profiles Cry Out In Confusion`;
+                    } else {
+                        mainWarning.textContent = "⚠️ WARNING: ILLEGAL TREND CHASER";
+                        flavorText.innerHTML = `DIAGNOSIS:<br>This dish was manufactured entirely for Instagram views.`;
+                    }
                 }
             }
         }
