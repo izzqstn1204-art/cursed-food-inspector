@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cursed Food Inspector</title>
+    <style>
+        /* Reset and full-screen camera view */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; font-family: 'Courier New', Courier, monospace; }
+        
+        #camera-stream {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        /* Top Static UI Header */
+        .scan-title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            color: #00ff00;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border: 2px solid #00ff00;
+            border-radius: 5px;
+            text-align: center;
+            width: 80%;
+            max-width: 400px;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        /* The AR Graphics Group */
+        .filter-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 90%;
+            max-width: 400px;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .filter-overlay.active {
+            opacity: 1;
+        }
+
+        /* Red Warning Banner (Updated to match image_2733a0.png styling layout) */
+        .warning-banner {
+            background: #ff0055;
+            color: white;
+            padding: 12px 20px;
+            font-weight: bold;
+            font-size: 15px;
+            text-align: center;
+            border: 2px solid white;
+            box-shadow: 0 0 15px #ff0055;
+            width: 100%;
+            box-sizing: border-box;
+            animation: blink 1s infinite alternate;
+        }
+
+        /* CRITICAL OVERPRICED BANNER */
+        .overprice-banner {
+            background: #ffcc00;
+            color: black;
+            padding: 10px 20px;
+            font-weight: 900;
+            font-size: 18px;
+            text-align: center;
+            border: 3px dashed #ff0055;
+            box-shadow: 0 0 25px #ffcc00;
+            width: 100%;
+            box-sizing: border-box;
+            display: none; 
+        }
+
+        /* Cyber Targeting Box */
+        .target-box {
+            width: 150px;
+            height: 150px;
+            border: 2px dashed #00ff00;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,255,0,0.2), 0 0 10px rgba(0,255,0,0.2);
+            animation: rotateBox 8s linear infinite;
+        }
+
+        /* Green Bottom Info Box */
+        .info-banner {
+            background: rgba(0, 0, 0, 0.85);
+            color: #00ff00;
+            padding: 12px 20px;
+            font-size: 13px;
+            text-align: center;
+            border: 1px solid #00ff00;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Bottom Control Button */
+        .ui-overlay {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            width: 100%;
+            text-align: center;
+        }
+
+        .scan-btn {
+            background: #00ff00;
+            color: black;
+            border: 2px solid black;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 0 15px #00ff00;
+            border-radius: 30px;
+        }
+
+        /* Animations */
+        @keyframes blink {
+            0% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+        @keyframes rotateBox {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Live Video Feed -->
+    <video id="camera-stream" autoplay playsinline></video>
+
+    <!-- Top Header -->
+    <div class="scan-title">
+        <div style="font-size: 18px; font-weight: bold; letter-spacing: 1px;">[ CURSED FOOD INSPECTOR ]</div>
+        <div id="status-text" style="font-size: 11px; color: #fff; margin-top: 5px;">AIM AT TREND FOOD & TAP SCAN</div>
+    </div>
+
+    <!-- AR Graphics Group -->
+    <div class="filter-overlay" id="ar-graphics">
+        <!-- Dynamic Overpriced Danger Alert -->
+        <div class="overprice-banner" id="overprice-alert">🚨 OVERPRICED GIMMICK DETECTED 🚨</div>
+        
+        <!-- Updated Warning Text based on image_2733a0.png context -->
+        <div class="warning-banner">⚠️ WARNING: UNHEALTHY FUSION FOOD DETECTED</div>
+        
+        <div class="target-box"></div>
+        <div class="info-banner" id="flavor-text">CRITICAL ERROR:<br>Flavor Profiles Cry Out In Confusion</div>
+    </div>
+
+    <!-- Bottom Action Button -->
+    <div class="ui-overlay">
+        <button class="scan-btn" id="action-trigger" onclick="handleScan()">Scan Food</button>
+    </div>
+
+    <script>
+        const graphics = document.getElementById('ar-graphics');
+        const btn = document.getElementById('action-trigger');
+        const statusText = document.getElementById('status-text');
+        const overpriceAlert = document.getElementById('overprice-alert');
+        const flavorText = document.getElementById('flavor-text');
+
+        function handleScan() {
+            if (graphics.classList.contains('active')) {
+                // Reset everything on click clear
+                graphics.classList.remove('active');
+                overpriceAlert.style.display = "none";
+                btn.textContent = "Scan Food";
+                btn.style.background = "#00ff00";
+                btn.style.boxShadow = "0 0 15px #00ff00";
+                btn.style.color = "black";
+                statusText.textContent = "AIM AT TREND FOOD & TAP SCAN";
+                statusText.style.color = "#fff";
+            } else {
+                // Ask user for the price input
+                let priceInput = prompt("Enter item price (RM):", "15");
+                let price = parseFloat(priceInput);
+
+                if (isNaN(price)) {
+                    alert("Please enter a valid number price!");
+                    return;
+                }
+
+                // Activate Filter Graphics
+                graphics.classList.add('active');
+                btn.textContent = "Clear Scan";
+                btn.style.background = "#ff0055";
+                btn.style.boxShadow = "0 0 15px #ff0055";
+                btn.style.color = "#fff";
+
+                // Price checking rule logic
+                if (price > 15) {
+                    overpriceAlert.style.display = "block";
+                    overpriceAlert.innerHTML = `🚨 OVERPRICED DETECTED: RM${price} 🚨<br><span style="font-size:11px;">(Normal Keli price is RM15 max!)</span>`;
+                    flavorText.innerHTML = `CRITICAL ERROR:<br>Wallet & Taste Buds Cry Out In Confusion`;
+                    statusText.textContent = "[ BOOTLEG CLOUT TRAP DETECTED ]";
+                    statusText.style.color = "#ffcc00";
+                } else {
+                    overpriceAlert.style.display = "none";
+                    flavorText.innerHTML = `CRITICAL ERROR:<br>Flavor Profiles Cry Out In Confusion`;
+                    statusText.textContent = "[ GIMMICK DETECTED // LOCK ACTIVE ]";
+                    statusText.style.color = "#ff0055";
+                }
+            }
+        }
+
+        // Camera Activation
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(stream => {
+            const video = document.getElementById('camera-stream');
+            video.srcObject = stream;
+        })
+        .catch(err => {
+            console.error("Camera access error: ", err);
+        });
+    </script>
+</body>
+</html>
